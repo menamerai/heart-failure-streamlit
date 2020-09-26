@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from joblib import load
+import sklearn 
 
 st.title("Heart Failure Prediction")
 st.write("""
