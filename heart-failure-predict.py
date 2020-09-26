@@ -82,7 +82,7 @@ so a decrease in hemoglobin might suggest a blockache, or in general how little 
 basically there's too much sugar in your blood. 
 I don't know the relevance of the type of diabetes, 
 since some are innate and genetic, while some are developed later in life. 
-I'll assume this only concerns whether a person's blood glucose is high.**
+I'll assume this only concerns whether a person's blood glucose is high.
 
 * **High blood pressure**: Exactly what it sounds like, your blood pressure is too high. 
 Usually prevalent in older people with conditions like the aforementioned diabetes, 
