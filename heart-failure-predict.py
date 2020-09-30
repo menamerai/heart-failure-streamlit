@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from joblib import load
-import sklearn 
+import sklearn
+from names import get_full_name
 
 st.title("Heart Failure Prediction")
 st.write("""
@@ -22,15 +23,18 @@ I'll be only attempting to demonstrate the model. Here goes,
 
 
 raw = pd.read_csv("heart_failure_clinical_records_dataset.csv")
-dataframe = raw.head().drop("DEATH_EVENT", axis=1)
+dataframe = raw.head(1).drop("DEATH_EVENT", axis=1)
 
 st.sidebar.write("# Build-a-person")
-st.sidebar.write("## Boolean Data")
 dataframe["sex"] = st.sidebar.selectbox("Choose person gender:", ["Male", "Female"])
+name_init = get_full_name(gender=dataframe["sex"].iloc[0].lower())
+st.sidebar.write("## Boolean Data")
 dataframe["smoking"] = st.sidebar.checkbox("Smoker")
 dataframe["anaemia"] = st.sidebar.checkbox("Anaemia")
 dataframe["diabetes"] = st.sidebar.checkbox("Diabetes")
 dataframe["high_blood_pressure"] = st.sidebar.checkbox("High blood pressure")
+for i in ["smoking", "anaemia", "diabetes", "high_blood_pressure"]:
+    dataframe[i].iloc[0] = 1 if dataframe[i].iloc[0] else 0
 
 
 st.sidebar.write("## Numeric Data")
@@ -44,14 +48,32 @@ dataframe["time"] = st.sidebar.slider("Follow-up period (days)", min_value=4, ma
 dataframe["sex"] = 1 if dataframe["sex"].iloc[0] == "Male" else 0
 
 
-st.write("## Input Dataframe")
+st.write("## Input Person")
 st.write("""
-*Note: There are five rows in this dataframe,
-but they all points to the user input.
-The reason why I am doing as such is because
-dataframes with 1 row is very hard to see in the Firefox broswer.*
-""")
-st.dataframe(dataframe)
+Hello! My name is {name}, I am {age} years old and I'm a {gender}. 
+I have recently come in again for a checkup after {followup} days.
+Regarding my relevant background: \n
+""".format(name=name_init, gender=("man" if dataframe["sex"].iloc[0] == 1 else "woman"), followup=dataframe["time"].iloc[0], age=dataframe["age"].iloc[0]))
+if dataframe["smoking"].iloc[0] == 1:
+    st.write("* I am a smoker.")
+if dataframe["anaemia"].iloc[0] == 1:
+    st.write("* I am suffering from anaemia.")
+if dataframe["diabetes"].iloc[0] == 1:
+    st.write("* I have diabetes.")
+if dataframe["high_blood_pressure"].iloc[0] == 1:
+    st.write("* I have a high blood pressure.")
+if (dataframe["smoking"].iloc[0] == dataframe["anaemia"].iloc[0] == dataframe["diabetes"].iloc[0] == dataframe["high_blood_pressure"].iloc[0] == 0):
+    st.write("* I am currently quite a healthy person, with no notabel recorded conditions.")
+
+st.write("""
+After several tests, my doctor has reported that: \n
+* My _Creatinine Phosphokinase_ level is {crphos} mcg/L
+* My _Ejection Fraction_ percentage is {ejfr}%
+* I have {platelets} kiloplatelets/mL in my bloodstream
+* My _Serum Creatinine_ level is {secr} mg/dL
+* My _Serum Sodium_ level is {seso} mEq/L
+""".format(crphos=dataframe["creatinine_phosphokinase"].iloc[0], ejfr=dataframe["ejection_fraction"].iloc[0], platelets=dataframe["platelets"].iloc[0], secr=dataframe["serum_creatinine"].iloc[0], seso=dataframe["serum_sodium"].iloc[0]))
+
 
 
 normalize_cols = ["ejection_fraction","serum_creatinine", "serum_sodium", "time", "creatinine_phosphokinase", "platelets"]
@@ -59,18 +81,23 @@ normalized_df = dataframe
 normalized_df[normalize_cols] = ((normalized_df[normalize_cols] - raw[normalize_cols].min()) / (raw[normalize_cols].max() - raw[normalize_cols].min())) * 20
 
 
-st.write("## *Model Predict*")
+st.write("## Model Predict")
 model = load("heart_failure_predictor(1).joblib")
 results = model.predict(normalized_df)
-results = "**_The model believes that the patient is under no immediate threat from heart failure._** Please, however, do note that the False Negative percentage of the model is quite pronounced, so more supervization is probably needed." if results[0] == 0 else "**_The patient is under risk of heart failure!_**"
+results = "**_The model believes that the patient is under no immediate threat from heart failure._**" if results[0] == 0 else "**_The patient is under risk of heart failure!_**"
 st.write(results)
+st.write("""Please, however, do note that the training data for the model is quite limited, 
+and thus also the predicting power of the model. 
+The model got quite an undesireably high False Negative scores (even though the accurary is ~88%), 
+so more patient supervisation should be necessary should the model predicts that the patient is under no danger.
+""")
 
 
 st.write("""
 # Documentation
 Some of the data customization options I gave have quite the medical background needed,
 which is quite undesireable as it makes the usage of this webapp more confusing.
-Thus, I will now write some slight background information regarding the data presented.
+Thus, I will now write some slight background information regarding the data presented:
 
 \n
 
